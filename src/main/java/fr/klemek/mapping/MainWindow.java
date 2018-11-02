@@ -9,7 +9,7 @@ import javax.swing.*;
 class MainWindow extends JFrame {
 
     static final String FILE_NAME = "mapping.csv";
-    private static final String VERSION = "1.0";
+    private static final String VERSION = "1.0.1";
     private static final int DEFAULT_SIZE = 17;
     private static final String INFO_TEXT = "" +
             "<html>" +
@@ -20,8 +20,8 @@ class MainWindow extends JFrame {
             "[BACKSPACE] - Erase everything<br>" +
             "[ARROWS] - Move view<br>" +
             "[PAGE UP/DOWN] - Change size<br/>" +
-            "[CTRL+S] - Save current work" +
-            "[0] - Show hide this info<br>" +
+            "[CTRL+S] - Save current work<br>" +
+            "[0] - Show/hide this info<br>" +
             "[1] - Show grid<br>" +
             "[2] - Add random<br>";
     private MainPanel mp;
