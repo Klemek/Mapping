@@ -1,0 +1,1 @@
+mvn clean package && del download\*.jar && xcopy /Y target\*-jar-with-dependencies.jar download && powershell -command "get-childitem download\* | foreach { rename-item $_ $_.Name.Replace('-jar-with-dependencies', '') }" && git add download/*.jar

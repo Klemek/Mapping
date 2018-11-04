@@ -8,13 +8,17 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-final class FileUtils {
+final class Utils {
 
-    private FileUtils() {
+    private Utils() {
 
     }
 
-    static boolean save(String fileName, String content) {
+    static int dist2(int x1, int y1, int x2, int y2) {
+        return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+    }
+
+    static boolean saveFile(String fileName, String content) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))) {
             bw.write(content);
             return true;
@@ -24,7 +28,7 @@ final class FileUtils {
         }
     }
 
-    static String open(String fileName) {
+    static String openFile(String fileName) {
         try (BufferedReader bw = new BufferedReader(new FileReader(fileName))) {
             StringBuilder output = new StringBuilder();
             String line;

@@ -76,7 +76,7 @@ public class KeyEventListener implements KeyListener {
                             "Save",
                             JOptionPane.YES_NO_OPTION);
                     if (n2 == JOptionPane.YES_OPTION) {
-                        if (FileUtils.save(MainWindow.FILE_NAME, this.mp.getMap().toString())) {
+                        if (Utils.saveFile(MainWindow.FILE_NAME, this.mp.getMap().toString())) {
                             JOptionPane.showInternalMessageDialog(this.mp,
                                     "Saved as '" + MainWindow.FILE_NAME + "'",
                                     "Saved",
@@ -90,6 +90,9 @@ public class KeyEventListener implements KeyListener {
                     }
                 }
                 break;
+            case KeyEvent.VK_SHIFT:
+                this.mp.setShiftDown(true);
+                break;
             default:
                 break;
         }
@@ -97,6 +100,12 @@ public class KeyEventListener implements KeyListener {
 
     @Override
     public void keyReleased(KeyEvent e) {
-        //ignored
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_SHIFT:
+                this.mp.setShiftDown(false);
+                break;
+            default:
+                break;
+        }
     }
 }
