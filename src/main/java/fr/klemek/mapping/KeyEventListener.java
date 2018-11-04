@@ -44,10 +44,14 @@ public class KeyEventListener implements KeyListener {
                 break;
             case KeyEvent.VK_1:
             case KeyEvent.VK_NUMPAD1:
-                this.mp.setShowGrid(!this.mp.isShowGrid());
+                this.mp.changeShowGrid();
                 break;
             case KeyEvent.VK_2:
             case KeyEvent.VK_NUMPAD2:
+                this.mp.changeShowFaces();
+                break;
+            case KeyEvent.VK_3:
+            case KeyEvent.VK_NUMPAD3:
                 this.mp.getMap().randomize();
                 break;
             case KeyEvent.VK_PAGE_UP:
@@ -92,6 +96,12 @@ public class KeyEventListener implements KeyListener {
                 break;
             case KeyEvent.VK_SHIFT:
                 this.mp.setShiftDown(true);
+                break;
+            case KeyEvent.VK_SPACE:
+                this.mp.changeTool();
+                break;
+            case KeyEvent.VK_DELETE:
+                this.mp.deleteSelected();
                 break;
             default:
                 break;

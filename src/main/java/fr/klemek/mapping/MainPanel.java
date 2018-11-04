@@ -1,6 +1,8 @@
 package fr.klemek.mapping;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.swing.*;
 
@@ -11,6 +13,10 @@ class MainPanel extends JPanel {
     private float ratio = DEFAULT_RATIO;
 
     private transient Map map;
+    private transient ToolChangeListener toolChangeListener;
+
+    private transient Tool tool = Tool.NODE_EXTRUDER;
+
     private int x0;
     private int y0;
     private float xstep;
@@ -22,11 +28,13 @@ class MainPanel extends JPanel {
     private int[][] ys;
 
     private boolean showGrid;
+    private boolean showFaces = true;
     private boolean shiftDown;
     private float angle;
 
-    MainPanel(Map map) {
+    MainPanel(Map map, ToolChangeListener toolChangeListener) {
         this.map = map;
+        this.toolChangeListener = toolChangeListener;
         new MouseListener(this);
     }
 
@@ -42,6 +50,8 @@ class MainPanel extends JPanel {
         if (this.showGrid)
             this.drawGrid(g2);
         this.drawMap(g2);
+        if (this.showFaces)
+            this.drawFaces(g2);
     }
 
     private void computeNodes() {
@@ -95,8 +105,6 @@ class MainPanel extends JPanel {
     }
 
     private void drawMap(Graphics2D g2) {
-
-
         for (int x = 0; x < this.map.size(); x++) {
             for (int y = 0; y < this.map.size(); y++) {
                 this.drawLine(g2, x - 1, y, x, y);
@@ -122,47 +130,98 @@ class MainPanel extends JPanel {
                 y1 >= 0 && y1 < this.map.size() &&
                 x2 >= 0 && x2 < this.map.size() &&
                 y2 >= 0 && y2 < this.map.size()) {
-            if (Utils.dist2(x1, y1, sx, sy) < (this.shiftDown ? 2 : 1) || Utils.dist2(x2, y2, sx, sy) < (this.shiftDown ? 2 : 1)) {
-                g2.setColor(Color.RED);
-            } else {
-                g2.setColor(Color.BLACK);
-            }
+            g2.setColor(isSelectedLine(x1, y1, x2, y2) ? Color.RED : Color.BLACK);
             g2.drawLine(this.xs[x1][y1], this.ys[x1][y1], this.xs[x2][y2], this.ys[x2][y2]);
         }
+    }
+
+    private boolean isSelectedLine(int x1, int y1, int x2, int y2) {
+        return this.tool == Tool.NODE_EXTRUDER &&
+                (Utils.dist2(x1, y1, sx, sy) < (this.shiftDown ? 2 : 1) ||
+                        Utils.dist2(x2, y2, sx, sy) < (this.shiftDown ? 2 : 1));
+    }
+
+    private void drawFaces(Graphics2D g2) {
+        for (int x = 0; x < this.map.size() - 1; x++)
+            for (int y = 0; y < this.map.size() - 1; y++)
+                drawFace(g2, x, y);
+    }
+
+    private void drawFace(Graphics2D g2, int x, int y) {
+        int diffY = Math.round(this.map.get(x, y, false) * this.ystep);
+        boolean selected = this.tool == Tool.FACE_EXTRUDER && Utils.dist2(x, y, sx, sy) < (this.shiftDown ? 3 : 1);
+        if (diffY == 0 && !selected)
+            return;
+        g2.setColor(selected ? Color.RED : Color.BLUE);
+        for (int dx = 0; dx <= 1; dx++)
+            for (int dy = 0; dy <= 1; dy++)
+                g2.drawLine(this.xs[x + dx][y + dy], this.ys[x + dx][y + dy], this.xs[x + dx][y + dy], this.ys[x + dx][y + dy] - diffY);
+        Polygon face = getFace(x, y);
+        face.translate(0, -diffY);
+        g2.drawPolygon(face);
     }
 
     void computeMouseMoved(Point position) {
         sx = -1;
         sy = -1;
-        if (MainPanel.this.xs != null) {
-            for (int x = 0; x < MainPanel.this.map.size(); x++)
-                for (int y = 0; y < MainPanel.this.map.size(); y++)
-                    if (position.distance(MainPanel.this.xs[x][y], MainPanel.this.ys[x][y]) < 6) {
-                        sx = x;
-                        sy = y;
-                        return;
-                    }
-        }
+        if (this.xs == null)
+            return;
+        int mx = -1;
+        int my = -1;
+        double min = 20;
+        double d;
+        for (int x = 0; x < this.map.size(); x++)
+            for (int y = 0; y < this.map.size(); y++)
+                if (this.tool == Tool.FACE_EXTRUDER && x < this.map.size() - 1 && y < this.map.size() - 1 && this.getFace(x, y).contains(position)) {
+                    this.sx = x;
+                    this.sy = y;
+                    return;
+                } else if (this.tool == Tool.NODE_EXTRUDER && (d = position.distance(this.xs[x][y], this.ys[x][y])) < min) {
+                    mx = x;
+                    my = y;
+                    min = d;
+                }
+        this.sx = mx;
+        this.sy = my;
+    }
+
+    private Polygon getFace(int x, int y) {
+        return new Polygon(new int[]{this.xs[x][y], this.xs[x + 1][y], this.xs[x + 1][y + 1], this.xs[x][y + 1]},
+                new int[]{this.ys[x][y], this.ys[x + 1][y], this.ys[x + 1][y + 1], this.ys[x][y + 1]}, 4);
     }
 
     void computeMouseWheel(int amount, boolean controlDown, boolean shiftDown) {
-        if (sx >= 0 && sy >= 0) {
-            if (shiftDown) {
-                for (int dx = -1; dx < 2; dx++)
-                    for (int dy = -1; dy < 2; dy++)
-                        changeNode(amount, controlDown, sx + dx, sy + dy);
-            } else
-                changeNode(amount, controlDown, sx, sy);
-        }
+        if (sx < 0 || sy < 0)
+            return;
+        if (shiftDown) {
+            for (int dx = -1; dx < 2; dx++)
+                for (int dy = -1; dy < 2; dy++)
+                    editMap(amount, controlDown, sx + dx, sy + dy, this.tool == Tool.NODE_EXTRUDER);
+        } else
+            editMap(amount, controlDown, sx, sy, this.tool == Tool.NODE_EXTRUDER);
     }
 
-    private void changeNode(int amount, boolean controlDown, int x, int y) {
+    private void editMap(int amount, boolean controlDown, int x, int y, boolean node) {
         if (x >= 0 && x < this.map.size()
                 && y >= 0 && y < this.map.size())
-            this.map.set(x, y, MainPanel.this.map.get(x, y)
-                    + amount * (controlDown ? -1f : -.1f));
+            this.map.set(x, y, this.map.get(x, y, node)
+                    + amount * (controlDown ? -1f : -.1f), node);
     }
 
+    void changeTool() {
+        ArrayList<Tool> tools = new ArrayList<>(Arrays.asList(Tool.values()));
+        this.tool = tools.get((tools.indexOf(this.tool) + 1) % tools.size());
+        if (this.tool == Tool.FACE_EXTRUDER)
+            this.showFaces = true;
+        if (toolChangeListener != null)
+            toolChangeListener.toolChange(this.tool);
+    }
+
+    void deleteSelected() {
+        if (sx < 0 || sy < 0)
+            return;
+        this.map.set(sx, sy, 0f, this.tool == Tool.NODE_EXTRUDER);
+    }
 
     float getRatio() {
         return ratio;
@@ -172,12 +231,12 @@ class MainPanel extends JPanel {
         this.ratio = ratio;
     }
 
-    boolean isShowGrid() {
-        return showGrid;
+    void changeShowGrid() {
+        this.showGrid = !showGrid;
     }
 
-    void setShowGrid(boolean showGrid) {
-        this.showGrid = showGrid;
+    void changeShowFaces() {
+        this.showFaces = !showFaces;
     }
 
     float getAngle() {
@@ -194,5 +253,9 @@ class MainPanel extends JPanel {
 
     void setShiftDown(boolean shiftDown) {
         this.shiftDown = shiftDown;
+    }
+
+    Tool getTool() {
+        return tool;
     }
 }

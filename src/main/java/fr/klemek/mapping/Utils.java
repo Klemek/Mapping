@@ -7,6 +7,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.logging.Level;
 
 final class Utils {
 
@@ -23,7 +24,7 @@ final class Utils {
             bw.write(content);
             return true;
         } catch (IOException ex) {
-            Logger.log(ex);
+            Logger.log(Level.WARNING, ex);
             return false;
         }
     }
@@ -38,7 +39,7 @@ final class Utils {
             }
             return output.toString();
         } catch (IOException ex) {
-            Logger.log(ex);
+            Logger.log(Level.WARNING, ex);
             return null;
         }
     }
