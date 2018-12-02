@@ -9,7 +9,7 @@ import javax.swing.*;
 class MainWindow extends JFrame {
 
     static final String FILE_NAME = "mapping.csv";
-    private static final String VERSION = "1.2";
+    private static final String VERSION = "1.2.1";
     private static final int DEFAULT_SIZE = 17;
     private static final String INFO_TEXT = "" +
             "<html>" +

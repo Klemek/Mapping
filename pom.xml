@@ -6,7 +6,7 @@
 
     <groupId>fr.klemek</groupId>
     <artifactId>mapping</artifactId>
-    <version>1.2</version>
+    <version>1.2.1</version>
 
     <repositories>
         <repository>
@@ -80,6 +80,7 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
+                    <outputDirectory>download</outputDirectory>
                     <archive>
                         <manifest>
                             <mainClass>fr.klemek.mapping.Launch</mainClass>

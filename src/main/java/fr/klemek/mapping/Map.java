@@ -83,7 +83,7 @@ class Map {
             for (int y = 0; y < newSize; y++) {
                 if (x < this.m.length && y < this.m.length)
                     tm[x][y] = this.m[x][y];
-                if (x < this.m2.length && y < this.m2.length)
+                if (x < this.m2.length && y < this.m2.length && x < tm2.length && y < tm2.length)
                     tm2[x][y] = this.m2[x][y];
             }
         this.m = tm;
